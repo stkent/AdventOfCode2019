@@ -1,67 +1,40 @@
-import extensions.allMatch
 import extensions.digits
+import extensions.isNonDecreasing
+import extensions.runs
 
 fun main() {
-//    // Part 1
-//    (273025..767253)
-//        .map(Int::digits)
-//        .filter { digits ->
-//            digits
-//                .windowed(size = 2, step = 1)
-//                .any { pair -> pair.allMatch() }
-//        }
-//        .filter(Iterable<Int>::isNonDecreasing)
-//        .count()
-//        .also { println(it) }
+    val inputRange = 273025..767253
+    val passwords = inputRange.map(::Password)
 
-    println(111122.digits().runs())
-    println(112233.digits().runs())
-    println(221133.digits().runs())
+    // Part 1
+    passwords
+        .count(Password::matchesPart1Criteria)
+        .also { println("Part 1 solution: $it") }
 
     // Part 2
-    (273025..767253)
-        .map(Int::digits)
-        .filter { digits ->
-            digits
-                .runs()
-                .any { it.size == 2 }
-        }
-        .filter(Iterable<Int>::isNonDecreasing)
-        .count()
-        .also { println(it) }
+    passwords
+        .count(Password::matchesPart2Criteria)
+        .also { println("Part 2 solution: $it") }
 }
 
-fun <T : Comparable<T>> Iterable<T>.isNonDecreasing(): Boolean {
-    return windowed(size = 2, step = 1)
-        .all { pair -> pair[0] <= pair[1] }
-}
+inline class Password(private val value: Int) {
+    fun matchesPart1Criteria(): Boolean {
+        val digits = value.digits()
 
-fun <T: Comparable<T>> Iterable<T>.runs(): List<List<T>> {
-    val allRuns = mutableListOf<List<T>>()
-    var currentValue: T? = null
-    var currentRunLength = 0
+        val hasRepeat = digits
+            .runs()
+            .any { run -> run.size >= 2 }
 
-    val iterator = iterator()
-    while (iterator.hasNext()) {
-        val nextValue = iterator.next()
-
-        if (currentRunLength == 0) {
-            currentValue = nextValue
-            currentRunLength = 1
-        } else {
-            if (nextValue == currentValue) {
-                currentRunLength += 1
-            } else {
-                allRuns.add(List(currentRunLength) { currentValue!! })
-                currentValue = nextValue
-                currentRunLength = 1
-            }
-        }
+        return hasRepeat && digits.isNonDecreasing()
     }
 
-    if (currentRunLength > 0) {
-        allRuns.add(List(currentRunLength) { currentValue!! })
-    }
+    fun matchesPart2Criteria(): Boolean {
+        val digits = value.digits()
 
-    return allRuns
+        val hasExactPair = digits
+            .runs()
+            .any { run -> run.size == 2 }
+
+        return hasExactPair && digits.isNonDecreasing()
+    }
 }
