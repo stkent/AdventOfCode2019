@@ -1,7 +1,7 @@
 import Computer.Opcode.*
-import Computer.ParamMode.*
+import Computer.ParamMode.Immediate
+import Computer.ParamMode.Position
 import extensions.digits
-import java.util.*
 
 fun main() {
     val inputProgram = resourceFile("input.txt")
@@ -10,39 +10,38 @@ fun main() {
         .split(',')
         .map(String::toInt)
 
-//    val inputProgram = listOf(3, 0, 4, 0, 99)
-//    val inputProgram = listOf(1101, 100, -1, 4, 0)
-//    val inputProgram = listOf(3, 3, 1107, -1, 8, 3, 4, 3, 99)
-//    val inputProgram = listOf(3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99)
-
     val computer = Computer()
 
+    // Part 1
+    val outputs = mutableListOf<Int>()
     computer.execute(
-        inputProgram,
-        object : Computer.Source {
-            override fun read(): Int {
-                print("Input number: ")
-                return Scanner(System.`in`).nextLine()!!.toInt()
-            }
-        },
-        object : Computer.Sink {
-            override fun write(i: Int) = println(i)
-        }
+        program = inputProgram,
+        source = { 1 },
+        sink = { output -> if (output > 0) outputs += output }
+    )
+
+    if (outputs.size == 1) {
+        println("Part 1 solution: ${outputs.first()}")
+    } else {
+        println("Tests failed with codes ${outputs.dropLast(1).joinToString(",")}")
+    }
+
+    // Part 2
+    computer.execute(
+        program = inputProgram,
+        source = { 5 },
+        sink = { output -> println("Part 2 solution: $output") }
     )
 }
 
 class Computer {
 
-    interface Source {
-        fun read(): Int
-    }
+    fun execute(
+        program: List<Int>,
+        source: (() -> Int)? = null,
+        sink: ((Int) -> Unit)? = null
+    ): List<Int> {
 
-    interface Sink {
-        fun write(i: Int)
-    }
-
-
-    fun execute(program: List<Int>, source: Source, sink: Sink): List<Int> {
         val maxIp = program.size - 1
 
         val memory: MutableList<Int> = program.toMutableList()
@@ -66,8 +65,14 @@ class Computer {
             when (opcode) {
                 Add -> memory[rawParams[2]] = resParams[0] + resParams[1]
                 Multiply -> memory[rawParams[2]] = resParams[0] * resParams[1]
-                Put -> memory[rawParams[0]] = source.read()
-                Out -> sink.write(resParams[0])
+
+                Read -> {
+                    memory[rawParams[0]] = source?.invoke() ?: run {
+                        throw IllegalStateException("No source to read from")
+                    }
+                }
+
+                Write -> sink?.invoke(resParams[0])
 
                 JumpIfTrue -> if (resParams[0] != 0) {
                     ip = resParams[1]
@@ -107,8 +112,8 @@ class Computer {
     private enum class Opcode(val paramCount: Int) {
         Add(3),
         Multiply(3),
-        Put(1),
-        Out(1),
+        Read(1),
+        Write(1),
         JumpIfTrue(2),
         JumpIfFalse(2),
         LessThan(3),
@@ -119,8 +124,8 @@ class Computer {
             fun fromInt(int: Int): Opcode? = when (int) {
                 1 -> Add
                 2 -> Multiply
-                3 -> Put
-                4 -> Out
+                3 -> Read
+                4 -> Write
                 5 -> JumpIfTrue
                 6 -> JumpIfFalse
                 7 -> LessThan

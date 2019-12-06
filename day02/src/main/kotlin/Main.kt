@@ -1,4 +1,4 @@
-import Opcode.*
+import Computer.Opcode.*
 
 fun main() {
     val inputProgram = resourceFile("input.txt")
@@ -52,8 +52,8 @@ class Computer {
 
             when (opcode) {
                 Add -> memory[args[2]] = memory[args[0]] + memory[args[1]]
-                Mul -> memory[args[2]] = memory[args[0]] * memory[args[1]]
-                End -> run = false
+                Multiply -> memory[args[2]] = memory[args[0]] * memory[args[1]]
+                Halt -> run = false
             }
 
             if (run) ip += opcode.argCount + 1
@@ -62,17 +62,17 @@ class Computer {
         return memory
     }
 
-}
+    enum class Opcode(val argCount: Int) {
+        Add(3), Multiply(3), Halt(0);
 
-enum class Opcode(val argCount: Int) {
-    Add(3), Mul(3), End(0);
-
-    companion object {
-        fun fromInt(int: Int): Opcode? = when (int) {
-               1 -> Add
-               2 -> Mul
-              99 -> End
-            else -> null
+        companion object {
+            fun fromInt(int: Int): Opcode? = when (int) {
+                1 -> Add
+                2 -> Multiply
+                99 -> Halt
+                else -> null
+            }
         }
     }
+
 }

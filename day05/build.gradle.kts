@@ -40,3 +40,7 @@ tasks {
 application {
     mainClassName = "MainKt"
 }
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}

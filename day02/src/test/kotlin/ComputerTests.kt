@@ -12,7 +12,7 @@ class ComputerTests {
     }
 
     @Test
-    fun `test program 1`() {
+    fun `simple program`() {
         // Arrange
         val program = listOf(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50)
 
@@ -24,7 +24,7 @@ class ComputerTests {
     }
 
     @Test
-    fun `test program 2`() {
+    fun `single add`() {
         // Arrange
         val program = listOf(1, 0, 0, 0, 99)
 
@@ -36,7 +36,7 @@ class ComputerTests {
     }
 
     @Test
-    fun `test program 3`() {
+    fun `single multiply`() {
         // Arrange
         val program = listOf(2, 3, 0, 3, 99)
 
@@ -48,7 +48,7 @@ class ComputerTests {
     }
 
     @Test
-    fun `test program 4`() {
+    fun `single multiply 2`() {
         // Arrange
         val program = listOf(2, 4, 4, 5, 99, 0)
 
@@ -60,7 +60,7 @@ class ComputerTests {
     }
 
     @Test
-    fun `test program 5`() {
+    fun `simple program 2`() {
         // Arrange
         val program = listOf(1, 1, 1, 4, 99, 5, 6, 0, 99)
 
