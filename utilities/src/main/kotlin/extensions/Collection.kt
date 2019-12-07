@@ -102,6 +102,17 @@ fun <T> Collection<T>.unorderedPairs(): Map<Pair<T, T>, Int> {
     return result.toMap()
 }
 
+/**
+ * Returns the symmetric difference of [this] and [other].
+ */
+infix fun <T> Set<T>.xor(other: Set<T>): Set<T> {
+    val result = toMutableSet()
+    other.forEach { if (it in result) result -= it else result += it }
+    return result
+}
+
+// Private implementation
+
 private fun <T> Multiset<T>.toMap(): Map<T, Int> {
     val result = mutableMapOf<T, Int>()
 
