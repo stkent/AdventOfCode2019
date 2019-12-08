@@ -86,4 +86,4 @@ Here are some example programs:
 
 Try every combination of the new phase settings on the amplifier feedback loop. **What is the highest signal that can be sent to the thrusters?**
 
-> Your puzzle answer was ``.
+> Your puzzle answer was `57660948`.

@@ -3,12 +3,11 @@ import Amplifier.ParamMode.Immediate
 import Amplifier.ParamMode.Position
 import extensions.digits
 import extensions.permutations
-import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 fun main() {
@@ -18,37 +17,45 @@ fun main() {
         .split(',')
         .map(String::toInt)
 
-    println("Part 1 solution: ${computeMaxSignal(inputProgram)}")
+    println("Part 1 solution: ${computeMaxSignal(inputProgram, withFeedback = false)}")
+    println("Part 2 solution: ${computeMaxSignal(inputProgram, withFeedback = true)}")
 }
 
-fun computeMaxSignal(program: List<Int>): Int {
-    return (0..4).toList()
+fun computeMaxSignal(program: List<Int>, withFeedback: Boolean): Int {
+    val allPhases = if (withFeedback) 5..9 else 0..4
+
+    return allPhases
+        .toList()
         .permutations()
         .map { phases -> computeSignal(program, phases) }
         .max()!!
 }
 
 fun computeSignal(program: List<Int>, phases: List<Int>): Int = runBlocking {
-    val aIn = Channel<Int>(capacity = UNLIMITED).apply {
-        send(phases[0])
-        send(0)
-    }
-    val ab = Channel<Int>(capacity = UNLIMITED).apply { send(phases[1]) }
-    val bc = Channel<Int>(capacity = UNLIMITED).apply { send(phases[2]) }
-    val cd = Channel<Int>(capacity = UNLIMITED).apply { send(phases[3]) }
-    val de = Channel<Int>(capacity = UNLIMITED).apply { send(phases[4]) }
-    val eOut = Channel<Int>(capacity = UNLIMITED)
+    val ab = Channel<Int>(capacity = 1).apply { send(phases[1]) }
+    val bc = Channel<Int>(capacity = 1).apply { send(phases[2]) }
+    val cd = Channel<Int>(capacity = 1).apply { send(phases[3]) }
+    val de = Channel<Int>(capacity = 1).apply { send(phases[4]) }
+    val ea = Channel<Int>(capacity = 2).apply { send(phases[0]) }
+    ea.send(0)
 
-    launch(Default) { Amplifier().execute(program, aIn, ab) }
-    launch(Default) { Amplifier().execute(program, ab, bc) }
-    launch(Default) { Amplifier().execute(program, bc, cd) }
-    launch(Default) { Amplifier().execute(program, cd, de) }
-    launch(Default) { Amplifier().execute(program, de, eOut) }
+    val amplifierE = Amplifier()
 
-    return@runBlocking eOut.receive()
+    awaitAll(
+        async { Amplifier().execute(program, ea, ab) },
+        async { Amplifier().execute(program, ab, bc) },
+        async { Amplifier().execute(program, bc, cd) },
+        async { Amplifier().execute(program, cd, de) },
+        async { amplifierE.execute(program, de, ea) }
+    )
+
+    return@runBlocking amplifierE.lastOutput!!
 }
 
 private class Amplifier {
+
+    var lastOutput: Int? = null
+        private set
 
     suspend fun execute(
         program: List<Int>,
@@ -84,6 +91,7 @@ private class Amplifier {
                 }
 
                 Write -> {
+                    lastOutput = resParams[0]
                     sink.send(resParams[0])
                 }
 
@@ -100,6 +108,7 @@ private class Amplifier {
                 LessThan -> memory[rawParams[2]] = if (resParams[0] < resParams[1]) 1 else 0
                 Equals -> memory[rawParams[2]] = if (resParams[0] == resParams[1]) 1 else 0
                 Halt -> {
+                    sink.close() // Cleanup
                     run = false
                 }
             }
