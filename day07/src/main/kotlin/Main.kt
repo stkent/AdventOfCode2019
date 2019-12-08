@@ -3,7 +3,11 @@ import Amplifier.ParamMode.Immediate
 import Amplifier.ParamMode.Position
 import extensions.digits
 import extensions.permutations
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -24,89 +28,33 @@ fun computeMaxSignal(program: List<Int>): Int {
         .max()!!
 }
 
-fun computeSignal(program: List<Int>, phases: List<Int>): Int {
-    val amplifierA = Amplifier("A")
-    val amplifierB = Amplifier("B")
-    val amplifierC = Amplifier("C")
-    val amplifierD = Amplifier("D")
-    val amplifierE = Amplifier("E")
-
-    val sourceA = Channel<Int>()
-    val channelAB = Channel<Int>()
-    val channelBC = Channel<Int>()
-    val channelCD = Channel<Int>()
-    val channelDE = Channel<Int>()
-    val sinkE = Channel<Int>()
-
-    return runBlocking {
-        launch {
-            println("Setting Amplifier A phase to ${phases[0]}")
-            sourceA.send(phases[0])
-        }
-        launch {
-            println("Setting Amplifier A input to 0")
-            sourceA.send(0)
-        }
-        launch {
-            println("Setting Amplifier B phase to ${phases[1]}")
-            channelAB.send(phases[1])
-        }
-        launch {
-            println("Setting Amplifier C phase to ${phases[2]}")
-            channelBC.send(phases[2])
-        }
-        launch {
-            println("Setting Amplifier D phase to ${phases[3]}")
-            channelCD.send(phases[3])
-        }
-        launch {
-            println("Setting Amplifier E phase to ${phases[4]}")
-            channelDE.send(phases[4])
-        }
-
-        launch {
-            println("Running Amplifier A")
-            amplifierA.execute(program, sourceA, channelAB)
-            println("Amplifier A finished running")
-        }
-
-        launch {
-            println("Running Amplifier B")
-            amplifierB.execute(program, channelAB, channelBC)
-            println("Amplifier B finished running")
-        }
-
-        launch {
-            println("Running Amplifier C")
-            amplifierC.execute(program, channelBC, channelCD)
-            println("Amplifier C finished running")
-        }
-
-        launch {
-            println("Running Amplifier D")
-            amplifierD.execute(program, channelCD, channelDE)
-            println("Amplifier D finished running")
-        }
-
-        launch {
-            println("Running Amplifier E")
-            amplifierE.execute(program, channelDE, sinkE)
-            println("Amplifier E finished running")
-        }
-
-        return@runBlocking sinkE.receive()
+fun computeSignal(program: List<Int>, phases: List<Int>): Int = runBlocking {
+    val aIn = Channel<Int>(capacity = UNLIMITED).apply {
+        send(phases[0])
+        send(0)
     }
+    val ab = Channel<Int>(capacity = UNLIMITED).apply { send(phases[1]) }
+    val bc = Channel<Int>(capacity = UNLIMITED).apply { send(phases[2]) }
+    val cd = Channel<Int>(capacity = UNLIMITED).apply { send(phases[3]) }
+    val de = Channel<Int>(capacity = UNLIMITED).apply { send(phases[4]) }
+    val eOut = Channel<Int>(capacity = UNLIMITED)
+
+    launch(Default) { Amplifier().execute(program, aIn, ab) }
+    launch(Default) { Amplifier().execute(program, ab, bc) }
+    launch(Default) { Amplifier().execute(program, bc, cd) }
+    launch(Default) { Amplifier().execute(program, cd, de) }
+    launch(Default) { Amplifier().execute(program, de, eOut) }
+
+    return@runBlocking eOut.receive()
 }
 
-private class Amplifier(val name: String) {
+private class Amplifier {
 
     suspend fun execute(
         program: List<Int>,
-        source: Channel<Int>,
-        sink: Channel<Int>
+        source: ReceiveChannel<Int>,
+        sink: SendChannel<Int>
     ): List<Int> {
-        println("Amplifier $name beginning execution.")
-
         val maxIp = program.size - 1
 
         val memory: MutableList<Int> = program.toMutableList()
@@ -132,17 +80,11 @@ private class Amplifier(val name: String) {
                 Multiply -> memory[rawParams[2]] = resParams[0] * resParams[1]
 
                 Read -> {
-                    println("Amplifier $name requesting input.")
                     memory[rawParams[0]] = source.receive()
-                    println("Amplifier $name received input.")
                 }
 
                 Write -> {
-                    println("Amplifier $name writing output.")
-                    if (!source.isClosedForSend) {
-                        sink.send(resParams[0])
-                    }
-                    println("Amplifier $name wrote output.")
+                    sink.send(resParams[0])
                 }
 
                 JumpIfTrue -> if (resParams[0] != 0) {
@@ -158,7 +100,6 @@ private class Amplifier(val name: String) {
                 LessThan -> memory[rawParams[2]] = if (resParams[0] < resParams[1]) 1 else 0
                 Equals -> memory[rawParams[2]] = if (resParams[0] == resParams[1]) 1 else 0
                 Halt -> {
-                    source.close()
                     run = false
                 }
             }

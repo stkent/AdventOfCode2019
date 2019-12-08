@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 class AmplifierTests {
 
     @Test
-    fun `example program 1`() {
+    fun `max signal example program 1`() {
         // Arrange
         val program = listOf(3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0)
 
@@ -16,7 +16,7 @@ class AmplifierTests {
     }
 
     @Test
-    fun `example program 2`() {
+    fun `max signal example program 2`() {
         // Arrange
         val program = listOf(
             3, 23, 3, 24, 1002, 24, 10, 24, 1002, 23, -1, 23,
@@ -31,7 +31,7 @@ class AmplifierTests {
     }
 
     @Test
-    fun `example program 3`() {
+    fun `max signal example program 3`() {
         // Arrange
         val program = listOf(
             3, 31, 3, 32, 1002, 32, 10, 32, 1001, 31, -2, 31, 1007, 31, 0, 33,
