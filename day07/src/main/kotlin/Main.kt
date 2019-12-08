@@ -3,12 +3,10 @@ import Amplifier.ParamMode.Immediate
 import Amplifier.ParamMode.Position
 import extensions.digits
 import extensions.permutations
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.runBlocking
 
 fun main() {
     val inputProgram = resourceFile("input.txt")
@@ -41,12 +39,12 @@ fun computeSignal(program: List<Int>, phases: List<Int>): Int = runBlocking {
 
     val amplifierE = Amplifier()
 
-    awaitAll(
-        async { Amplifier().execute(program, ea, ab) },
-        async { Amplifier().execute(program, ab, bc) },
-        async { Amplifier().execute(program, bc, cd) },
-        async { Amplifier().execute(program, cd, de) },
-        async { amplifierE.execute(program, de, ea) }
+    joinAll(
+        launch(Dispatchers.Default) { Amplifier().execute(program, ea, ab) },
+        launch(Dispatchers.Default) { Amplifier().execute(program, ab, bc) },
+        launch(Dispatchers.Default) { Amplifier().execute(program, bc, cd) },
+        launch(Dispatchers.Default) { Amplifier().execute(program, cd, de) },
+        launch(Dispatchers.Default) { amplifierE.execute(program, de, ea) }
     )
 
     return@runBlocking amplifierE.lastOutput!!

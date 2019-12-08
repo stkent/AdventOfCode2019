@@ -44,6 +44,10 @@ fun <T> Iterable<T>.allNeighborsSatisfy(predicate: (prev: T, next: T) -> Boolean
     return true
 }
 
+fun <T> Iterable<T>.collapseToString(): String {
+    return joinToString(separator = "")
+}
+
 fun <T> Iterable<T>.elementCounts(): Map<T, Int> {
     return groupingBy { it }.eachCount()
 }
