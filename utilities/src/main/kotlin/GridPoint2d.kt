@@ -1,8 +1,10 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
+import java.lang.IllegalStateException
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 
 data class GridPoint2d(val x: Int, val y: Int) {
 
@@ -60,4 +62,33 @@ data class GridPoint2d(val x: Int, val y: Int) {
         return GridVector2d(other.x - x, other.y - y)
     }
 
+}
+
+data class GridBounds2d(val left: Int, val right: Int, val bottom: Int, val top: Int)
+
+fun Iterable<GridPoint2d>.bounds(): GridBounds2d {
+    var boundsLeft = Int.MAX_VALUE
+    var boundsRight = Int.MIN_VALUE
+    var boundsBottom = Int.MAX_VALUE
+    var boundsTop = Int.MIN_VALUE
+
+    val iterator = iterator()
+    if (!iterator.hasNext()) {
+        throw IllegalStateException("This method cannot be called on an empty Iterable.")
+    }
+
+    while (iterator.hasNext()) {
+        val next = iterator.next()
+        boundsLeft = min(boundsLeft, next.x)
+        boundsRight = max(boundsRight, next.x)
+        boundsBottom = min(boundsBottom, next.y)
+        boundsTop = max(boundsTop, next.y)
+    }
+
+    return GridBounds2d(
+        left = boundsLeft,
+        right = boundsRight,
+        bottom = boundsBottom,
+        top = boundsTop
+    )
 }

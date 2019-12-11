@@ -3,7 +3,7 @@
 enum class GridDirection {
     N, E, S, W;
 
-    fun toVector(): GridVector2d {
+    fun toUnitVector(): GridVector2d {
         return when (this) {
             //@formatter:off
             N -> GridVector2d( 0,  1)
