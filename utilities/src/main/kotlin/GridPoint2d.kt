@@ -56,4 +56,8 @@ data class GridPoint2d(val x: Int, val y: Int) {
         )
     )
 
+    fun vectorTo(other: GridPoint2d): GridVector2d {
+        return GridVector2d(other.x - x, other.y - y)
+    }
+
 }

@@ -67,3 +67,9 @@ fun primes(candidates: Sequence<Int> = generateSequence(2) { it + 1 }): Sequence
         yieldAll(primes(candidates.filterNot { it % newPrime == 0 }))
     }
 }
+
+fun sign(x: Int): Int {
+    if (x < 0) return -1
+    if (x > 0) return +1
+    return 0
+}
