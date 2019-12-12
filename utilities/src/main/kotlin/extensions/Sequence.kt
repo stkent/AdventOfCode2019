@@ -37,3 +37,5 @@ fun <T> Sequence<T>.firstRepeat(targetCount: Int): T? {
 
     return iterator().firstRepeat(targetCount = targetCount)
 }
+
+fun <T> Sequence<T>.firstRepeatIndex(): Int? = iterator().firstRepeatIndex()

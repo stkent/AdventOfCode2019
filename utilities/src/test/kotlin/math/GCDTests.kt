@@ -44,16 +44,4 @@ class GCDTests {
         assertEquals(6, gcd)
     }
 
-    @Test
-    fun `gcd of positive integer with 0 should be 0`() {
-        // Arrange
-        val n = 9
-
-        // Act
-        val gcd = gcd(n, 0)
-
-        // Assert
-        assertEquals(0, gcd)
-    }
-
 }

@@ -1,21 +1,51 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
-// From https://en.wikipedia.org/wiki/Greatest_common_divisor#Using_Euclid's_algorithm
+// From https://en.wikipedia.org/wiki/Greatest_common_divisor#Using_Euclid%27s_algorithm
 fun gcd(a: Int, b: Int): Int {
-    if (a == 0 || b == 0) {
-        return 0
+    require(a > 0 && b > 0) { "GCD can only be computed for positive integers." }
+
+    var a = a
+    var b = b
+
+    while (a != b) {
+        if (a > b) {
+            a -= b
+        } else {
+            b -= a
+        }
     }
 
-    return when {
-        a < b -> gcd(a, b - a)
-        a > b -> gcd(a - b, b)
-        else -> a
+    return a
+}
+
+// From https://en.wikipedia.org/wiki/Greatest_common_divisor#Using_Euclid%27s_algorithm
+fun gcd(a: Long, b: Long): Long {
+    var a = a
+    var b = b
+
+    while (a != b) {
+        if (a > b) {
+            a -= b
+        } else {
+            b -= a
+        }
     }
+
+    return a
 }
 
 // From https://en.wikipedia.org/wiki/Least_common_multiple#Reduction_by_the_greatest_common_divisor
-fun lcm(a: Int, b: Int): Int {
+fun lcm(a: Int, b: Int): Long {
     if (a == 0 && b == 0) {
+        return 0
+    }
+
+    return a.toLong() * b.toLong() / gcd(a, b)
+}
+
+// From https://en.wikipedia.org/wiki/Least_common_multiple#Reduction_by_the_greatest_common_divisor
+fun lcm(a: Long, b: Long): Long {
+    if (a == 0L && b == 0L) {
         return 0
     }
 
@@ -66,10 +96,4 @@ fun primes(candidates: Sequence<Int> = generateSequence(2) { it + 1 }): Sequence
         yield(newPrime)
         yieldAll(primes(candidates.filterNot { it % newPrime == 0 }))
     }
-}
-
-fun sign(x: Int): Int {
-    if (x < 0) return -1
-    if (x > 0) return +1
-    return 0
 }

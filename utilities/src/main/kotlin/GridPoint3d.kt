@@ -15,6 +15,10 @@ data class GridPoint3d(val x: Int, val y: Int, val z: Int) {
 
     operator fun plus(vector: GridVector3d) = GridPoint3d(x + vector.x, y + vector.y, z + vector.z)
 
+    override fun toString(): String {
+        return "($x, $y, $z)"
+    }
+
     fun adjacentPoints(): Set<GridPoint3d> = setOf(
         GridPoint3d(x + 1, y, z),
         GridPoint3d(x - 1, y, z),
@@ -44,5 +48,9 @@ data class GridPoint3d(val x: Int, val y: Int, val z: Int) {
     }
 
     fun lInfDistanceTo(other: GridPoint3d) = max(max(abs(x - other.x), abs(y - other.y)), abs(z - other.z))
+
+    fun vectorTo(other: GridPoint3d): GridVector3d {
+        return GridVector3d(other.x - x, other.y - y, other.z - z)
+    }
 
 }
