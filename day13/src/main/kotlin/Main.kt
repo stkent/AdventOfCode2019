@@ -73,6 +73,9 @@ private enum class TileType {
 }
 
 private sealed class OutputState {
+
+    abstract fun accept(output: Long): OutputState
+
     open class AwaitingFirstValue : OutputState() {
         override fun accept(output: Long) = AwaitingSecondValue(first = output)
     }
@@ -96,8 +99,6 @@ private sealed class OutputState {
 
     class CompletedTile(val location: GridPoint2d, val type: TileType) : AwaitingFirstValue()
     class CompletedScore(val score: Long) : AwaitingFirstValue()
-
-    abstract fun accept(output: Long): OutputState
 }
 
 private fun display(tiles: Map<GridPoint2d, TileType>) {
