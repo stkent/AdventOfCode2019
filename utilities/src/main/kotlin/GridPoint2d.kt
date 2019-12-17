@@ -17,10 +17,10 @@ data class GridPoint2d(val x: Int, val y: Int) {
     operator fun plus(vector: GridVector2d) = GridPoint2d(x + vector.x, y + vector.y)
 
     fun adjacentPoints(): Set<GridPoint2d> = setOf(
-        GridPoint2d(x + 1, y),
-        GridPoint2d(x - 1, y),
-        GridPoint2d(x, y + 1),
-        GridPoint2d(x, y - 1)
+        copy(y = y + 1),
+        copy(x = x + 1),
+        copy(y = y - 1),
+        copy(x = x - 1)
     )
 
     fun flipX(): GridPoint2d {
