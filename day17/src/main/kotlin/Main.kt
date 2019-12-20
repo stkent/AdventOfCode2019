@@ -49,13 +49,13 @@ fun main() {
     //    B.....C................................................
     //    CCCCCCC................................................
 
-    val input = listOf(
+    val inputs = listOf(
         "A,B,A,C,B,C,B,C,A,C\n", // Main routine
         "L,10,R,12,R,12\n",      // Routine A
         "R,6,R,10,L,10\n",       // Routine B
         "R,10,L,10,L,12,R,6\n",  // Routine C
         "n\n"                    // Video feed y/n
-    ).flatMap { it.map(Char::toInt) }.iterator()
+    ).flatMap { it.map(Char::toLong).map(Computer.Input::Value) }.iterator()
 
     val outputs = mutableListOf<Long>()
     Computer().execute(
@@ -64,7 +64,7 @@ fun main() {
             .apply {
                 set(0, 2)
             },
-        source = { input.next().toLong() },
+        source = { inputs.next() },
         sink = { outputs += it })
 
     println("Part 2 solution: ${outputs.last()}")

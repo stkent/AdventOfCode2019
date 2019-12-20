@@ -1,8 +1,11 @@
-import Opcode.*
-import ParamMode.*
 import extensions.digits
 
 class Computer {
+
+    sealed class Input {
+        class Value(val rawValue: Long) : Input()
+        object Terminate : Input()
+    }
 
     /**
      * Runs the given [program] and returns the final memory state. Any inputs needed are requested
@@ -10,7 +13,7 @@ class Computer {
      */
     fun execute(
         program: List<Long>,
-        source: (() -> Long)? = null,
+        source: (() -> Input)? = null,
         sink: ((Long) -> Unit)? = null
     ): Map<Long, Long> {
 
@@ -29,93 +32,99 @@ class Computer {
         fun nextArg(mode: ParamMode): Long {
             val rawArg = memory.getValue(ip++)
             return when (mode) {
-                Position -> memory.getValue(rawArg)
-                Immediate -> rawArg
-                Relative -> memory.getValue(relativeBase + rawArg)
+                ParamMode.Position -> memory.getValue(rawArg)
+                ParamMode.Immediate -> rawArg
+                ParamMode.Relative -> memory.getValue(relativeBase + rawArg)
             }
         }
 
         fun nextWriteAddress(mode: ParamMode): Long {
             val rawWriteAddress = memory.getValue(ip++)
             return when (mode) {
-                Position -> rawWriteAddress
-                Immediate -> throw IllegalStateException("Invalid mode for write address.")
-                Relative -> relativeBase + rawWriteAddress
+                ParamMode.Position -> rawWriteAddress
+                ParamMode.Immediate -> throw IllegalStateException("Invalid write address mode.")
+                ParamMode.Relative -> relativeBase + rawWriteAddress
             }
         }
 
         while (run) {
-            val (opcode, modes) = parseInstruction(memory.getValue(ip)).also { ip++ }
+            val (opcode, modes) = Instruction(memory.getValue(ip)).also { ip++ }
 
             when (opcode) {
-                Add -> {
+                Opcode.Add -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     memory[nextWriteAddress(modes(2))] = arg1 + arg2
                 }
 
-                Multiply -> {
+                Opcode.Multiply -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     memory[nextWriteAddress(modes(2))] = arg1 * arg2
                 }
 
-                Read -> {
-                    memory[nextWriteAddress(modes(0))] = source?.invoke() ?: run {
-                        throw IllegalStateException("No source to read from")
+                Opcode.Read -> {
+                    when (val input = source?.invoke()) {
+                        is Input.Value -> memory[nextWriteAddress(modes(0))] = input.rawValue
+                        Input.Terminate -> run = false
+                        null -> throw IllegalStateException("No source to read from.")
                     }
                 }
 
-                Write -> sink?.invoke(nextArg(modes(0)))
+                Opcode.Write -> sink?.invoke(nextArg(modes(0)))
 
-                JumpIfTrue -> {
+                Opcode.JumpIfTrue -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     if (arg1 != 0L) ip = arg2
                 }
 
-                JumpIfFalse -> {
+                Opcode.JumpIfFalse -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     if (arg1 == 0L) ip = arg2
                 }
 
-                LessThan -> {
+                Opcode.LessThan -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     memory[nextWriteAddress(modes(2))] = if (arg1 < arg2) 1 else 0L
                 }
 
-                Equals -> {
+                Opcode.Equals -> {
                     val arg1 = nextArg(modes(0))
                     val arg2 = nextArg(modes(1))
                     memory[nextWriteAddress(modes(2))] = if (arg1 == arg2) 1 else 0L
                 }
 
-                AddToRelativeBase -> relativeBase += nextArg(modes(0))
-                Halt -> run = false
+                Opcode.AddToRelativeBase -> relativeBase += nextArg(modes(0))
+                Opcode.Halt -> run = false
             }
         }
 
         return memory
     }
 
-    private fun parseInstruction(rawInstruction: Long): Instruction {
-        val rawOpcode = (rawInstruction % 100)
-        val opcode = Opcode.fromLong(rawOpcode) ?: run {
-            throw IllegalStateException("Unexpected instruction: $rawInstruction")
-        }
-
-        val paramModes = (rawInstruction / 100).digits()
-            .reversed()
-            .map { index -> ParamMode.values()[index] }
-
-        return Instruction(opcode) { index -> paramModes.getOrElse(index) { Position } }
-    }
-
 }
 
-private data class Instruction(val opCode: Opcode, val modes: (Int) -> ParamMode)
+private data class Instruction(val opCode: Opcode, val modes: (Int) -> ParamMode) {
+    companion object {
+        operator fun invoke(rawInstruction: Long): Instruction {
+            val rawOpcode = (rawInstruction % 100)
+            val opcode = Opcode.fromLong(rawOpcode) ?: run {
+                throw IllegalStateException("Unexpected instruction: $rawInstruction.")
+            }
+
+            val paramModes = (rawInstruction / 100).digits()
+                .reversed()
+                .map { index -> ParamMode.values()[index] }
+
+            return Instruction(opcode) { index ->
+                paramModes.getOrElse(index) { ParamMode.Position }
+            }
+        }
+    }
+}
 
 private enum class Opcode {
     Add,

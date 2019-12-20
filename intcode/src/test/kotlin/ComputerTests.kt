@@ -107,8 +107,8 @@ class ComputerTests {
     fun `{day 5} echoing input`() {
         // Arrange
         val program = listOf<Long>(3, 0, 4, 0, 99)
-        val input = 1827L
-        val source = { input }
+        val rawInput = 1827L
+        val source = { Computer.Input.Value(rawInput) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -118,7 +118,7 @@ class ComputerTests {
 
         // Assert
         assertEquals(1, outputs.size)
-        assertEquals(input, outputs.first())
+        assertEquals(rawInput, outputs.first())
     }
 
     @Test
@@ -149,7 +149,7 @@ class ComputerTests {
     fun `{day 5} check if input is equal to 8 (position mode, input = 8)`() {
         // Arrange
         val program = listOf<Long>(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8)
-        val source = { 8L }
+        val source = { Computer.Input.Value(8L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -166,7 +166,7 @@ class ComputerTests {
     fun `{day 5} check if input is equal to 8 (position mode, input != 8)`() {
         // Arrange
         val program = listOf<Long>(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8)
-        val source = { 7L }
+        val source = { Computer.Input.Value(7L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -183,7 +183,7 @@ class ComputerTests {
     fun `{day 5} check if input is less than 8 (position mode, input = 8)`() {
         // Arrange
         val program = listOf<Long>(3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8)
-        val source = { 8L }
+        val source = { Computer.Input.Value(8L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -200,7 +200,7 @@ class ComputerTests {
     fun `{day 5} check if input is less than 8 (position mode, input less than 8)`() {
         // Arrange
         val program = listOf<Long>(3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8)
-        val source = { 7L }
+        val source = { Computer.Input.Value(7L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -217,7 +217,7 @@ class ComputerTests {
     fun `{day 5} check if input is equal to 8 (immediate mode, input = 8)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1108, -1, 8, 3, 4, 3, 99)
-        val source = { 8L }
+        val source = { Computer.Input.Value(8L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -234,7 +234,7 @@ class ComputerTests {
     fun `{day 5} check if input is equal to 8 (immediate mode, input != 8)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1108, -1, 8, 3, 4, 3, 99)
-        val source = { 7L }
+        val source = { Computer.Input.Value(7L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -251,7 +251,7 @@ class ComputerTests {
     fun `{day 5} check if input is less than 8 (immediate mode, input = 8)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1107, -1, 8, 3, 4, 3, 99)
-        val source = { 8L }
+        val source = { Computer.Input.Value(8L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -268,7 +268,7 @@ class ComputerTests {
     fun `{day 5} check if input is less than 8 (immediate mode, input less than 8)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1107, -1, 8, 3, 4, 3, 99)
-        val source = { 7L }
+        val source = { Computer.Input.Value(7L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -285,7 +285,7 @@ class ComputerTests {
     fun `{day 5} check if input is non-zero (jump, position mode, input != 0)`() {
         // Arrange
         val program = listOf<Long>(3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9)
-        val source = { -6L }
+        val source = { Computer.Input.Value(-6L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -302,7 +302,7 @@ class ComputerTests {
     fun `{day 5} check if input is non-zero (jump, position mode, input = 0)`() {
         // Arrange
         val program = listOf<Long>(3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9)
-        val source = { 0L }
+        val source = { Computer.Input.Value(0L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -319,7 +319,7 @@ class ComputerTests {
     fun `{day 5} check if input is non-zero (jump, immediate mode, input != 0)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1)
-        val source = { -6L }
+        val source = { Computer.Input.Value(-6L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -336,7 +336,7 @@ class ComputerTests {
     fun `{day 5} check if input is non-zero (jump, immediate mode, input = 0)`() {
         // Arrange
         val program = listOf<Long>(3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1)
-        val source = { 0L }
+        val source = { Computer.Input.Value(0L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -358,7 +358,7 @@ class ComputerTests {
             999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46, 98, 99
         )
 
-        val source = { 8L }
+        val source = { Computer.Input.Value(8L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -380,7 +380,7 @@ class ComputerTests {
             999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46, 98, 99
         )
 
-        val source = { 3L }
+        val source = { Computer.Input.Value(3L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }
@@ -402,7 +402,7 @@ class ComputerTests {
             999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46, 98, 99
         )
 
-        val source = { 13L }
+        val source = { Computer.Input.Value(13L) }
 
         val outputs = mutableListOf<Long>()
         val sink = { output: Long -> outputs += output }

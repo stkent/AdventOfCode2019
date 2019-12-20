@@ -39,7 +39,9 @@ private class Robot {
 
         computer.execute(
             program = program,
-            source = { paintedPanels.getOrDefault(position, Black).ordinal.toLong() },
+            source = {
+                Computer.Input.Value(paintedPanels.getOrDefault(position, Black).ordinal.toLong())
+            },
             sink = { output ->
                 when (outputMode) {
                     Paint -> paintedPanels[position] = PaintColor.values()[output.toInt()]

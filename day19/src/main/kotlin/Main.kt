@@ -54,7 +54,11 @@ private class Drone(val program: List<Long>) {
     }
 
     fun isCoordInBeam(coord: GridPoint2d): Boolean {
-        val inputs = listOf(coord.x, coord.y).map(Int::toLong).iterator()
+        val inputs = listOf(coord.x, coord.y)
+            .map(Int::toLong)
+            .map(Computer.Input::Value)
+            .iterator()
+
         var result = false
 
         Computer().execute(

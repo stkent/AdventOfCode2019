@@ -1,6 +1,3 @@
-import GridDirection.*
-import ShipAreaType.*
-
 fun main() {
     val inputProgram = resourceFile("input.txt")
         .readLines()
@@ -9,38 +6,59 @@ fun main() {
         .map(String::toLong)
 
     val shipMap = computeShipMap(program = inputProgram)
+    printShipMap(shipMap)
 }
 
 fun computeShipMap(program: List<Long>): Map<GridPoint2d, ShipAreaType> {
     var droidCoords = GridPoint2d.origin
     val droidPath = mutableListOf<GridDirection>()
     val shipMap = mutableMapOf<GridPoint2d, ShipAreaType>()
+        .apply { put(droidCoords, ShipAreaType.Floor) }
+        .withDefault { ShipAreaType.Unknown }
 
     Computer().execute(
         program = program,
         source = source@ {
-            val nextStep = GridDirection.values()
-                .firstOrNull { droidCoords + it.toUnitVector() !in shipMap }
+            val exploreStep = GridDirection.values()
+                .find { droidCoords + it.toUnitVector() !in shipMap }
 
-            return@source (nextStep?.let {
-                // we have found a location that's not in the map yet; try moving there
-                nextStep
-            } ?: run {
-                droidPath.last().`180`()
-            }).asInput()
+            if (exploreStep != null) {
+                droidCoords += exploreStep.toUnitVector()
+                droidPath += exploreStep
+                return@source exploreStep.asInput()
+            } else {
+                if (droidPath.isNotEmpty()) {
+                    val backtrackStep = droidPath.removeAt(droidPath.lastIndex).`180`()
+                    droidCoords += backtrackStep.toUnitVector()
+                    return@source backtrackStep.asInput()
+                } else {
+                    return@source Computer.Input.Terminate
+                }
+            }
         },
         sink = { output ->
-//            val shipAreaType = values()[output.toInt()]
-//            val targetLocation = droidCoords + nextStep().toUnitVector()
-//            ship += targetLocation to shipAreaType
-//            if (shipAreaType != Wall) droidLocationData = targetLocation
-//            displayShip(ship, droidLocationData)
+            val shipAreaType = ShipAreaType.values()[output.toInt()]
+
+            if (shipAreaType == ShipAreaType.OxygenSystem) {
+                println("Part 1 solution: " + droidPath.size)
+            }
+
+            shipMap += droidCoords to shipAreaType
+
+            if (shipAreaType == ShipAreaType.Wall) {
+                // We hit a wall and didn't advance as expected; reset our position:
+                val resetStep = droidPath.removeAt(droidPath.lastIndex).`180`()
+                droidCoords += resetStep.toUnitVector()
+            }
+
         }
     )
+
+    return shipMap
 }
 
-private fun printShipMap(ship: Map<GridPoint2d, ShipAreaType>) {
-    val (left, right, bottom, top) = ship.keys.bounds()
+private fun printShipMap(shipMap: Map<GridPoint2d, ShipAreaType>) {
+    val (left, right, bottom, top) = shipMap.keys.bounds()
 
     for (y in top downTo bottom) {
         for (x in left..right) {
@@ -48,13 +66,13 @@ private fun printShipMap(ship: Map<GridPoint2d, ShipAreaType>) {
 
             print(
                 when (location) {
-                    GridPoint2d.origin -> '*'
+                    GridPoint2d.origin -> 'O'
                     else -> {
-                        when (ship.getValue(GridPoint2d(x, y))) {
-                            Unknown -> ' '
-                            Floor -> '.'
-                            Wall -> '█'
-                            OxygenSystem -> '!'
+                        when (shipMap.getValue(GridPoint2d(x, y))) {
+                            ShipAreaType.Unknown -> ' '
+                            ShipAreaType.Floor -> '.'
+                            ShipAreaType.Wall -> '█'
+                            ShipAreaType.OxygenSystem -> 'A'
                         }
                     }
                 }
@@ -69,11 +87,9 @@ enum class ShipAreaType {
     Wall, Floor, OxygenSystem, Unknown
 }
 
-private data class Location(val coords: GridPoint2d, val steps: List<GridDirection>)
-
-fun GridDirection.asInput() = when (this) {
-    N -> 1L
-    E -> 4L
-    S -> 2L
-    W -> 3L
-}
+fun GridDirection.asInput() = Computer.Input.Value(when (this) {
+    GridDirection.N -> 1L
+    GridDirection.E -> 4L
+    GridDirection.S -> 2L
+    GridDirection.W -> 3L
+})

@@ -50,7 +50,7 @@ private class Game {
 
         computer.execute(
             program = program,
-            source = { joystick?.invoke(tiles) ?: 0L },
+            source = { Computer.Input.Value(joystick?.invoke(tiles) ?: 0L) },
             sink = { output ->
                 outputState.accept(output).let {
                     outputState = it

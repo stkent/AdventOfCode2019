@@ -11,7 +11,7 @@ fun main() {
     val outputs = mutableListOf<Long>()
     computer.execute(
         program = inputProgram,
-        source = { 1 },
+        source = { Computer.Input.Value(1) },
         sink = { output -> if (output > 0) outputs += output }
     )
 
@@ -24,7 +24,7 @@ fun main() {
     // Part 2
     computer.execute(
         program = inputProgram,
-        source = { 5 },
+        source = { Computer.Input.Value(5) },
         sink = { output -> println("Part 2 solution: $output") }
     )
 }
