@@ -41,7 +41,7 @@ private fun wirePath(wire: String): List<GridPoint2d> {
                 'D' -> S
                 'L' -> W
                 else -> throw IllegalStateException()
-            }).toUnitVector()
+            }).toVector()
 
             val stepCount = segment.drop(1).toInt()
 

@@ -47,7 +47,7 @@ private class Robot {
                     Paint -> paintedPanels[position] = PaintColor.values()[output.toInt()]
                     Move -> {
                         direction = if (output == 0L) direction.left90() else direction.right90()
-                        position += direction.toUnitVector()
+                        position += direction.toVector()
                     }
                 }
 

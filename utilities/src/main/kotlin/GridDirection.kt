@@ -3,13 +3,13 @@
 enum class GridDirection {
     N, E, S, W;
 
-    fun toUnitVector(): GridVector2d {
+    fun toVector(length: Int = 1): GridVector2d {
         return when (this) {
             //@formatter:off
-            N -> GridVector2d( 0,  1)
-            E -> GridVector2d( 1,  0)
-            S -> GridVector2d( 0, -1)
-            W -> GridVector2d(-1,  0)
+            N -> GridVector2d( 0,  length)
+            E -> GridVector2d( length,  0)
+            S -> GridVector2d( 0, -length)
+            W -> GridVector2d(-length,  0)
             //@formatter:on
         }
     }
