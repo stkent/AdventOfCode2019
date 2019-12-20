@@ -1,6 +1,5 @@
 import Computer.Input.*
 import AreaType.*
-import java.util.*
 
 fun main() {
     val inputProgram = resourceFile("input.txt")
@@ -17,18 +16,15 @@ fun main() {
         .find { (_, areaType) -> areaType == OxygenSystem }!!
         .key
 
-    // Part 1
-    pathLengths(shipMap, start = GridPoint2d.origin)[oxygen].also { pathLengthToOxygen ->
-        println("Part 1 solution: $pathLengthToOxygen")
+    val getNeighbors: (GridPoint2d) -> Map<GridPoint2d, Int> = { current ->
+        current
+            .adjacentPoints()
+            .filter { shipMap[it] != Wall }
+            .associateWith { 1 }
     }
 
-    // Part 2
-    pathLengths(shipMap, start = oxygen)
-        .values
-        .max()!!
-        .also { maxOxygenationTime ->
-            println("Part 2 solution: $maxOxygenationTime")
-        }
+    println("Part 1 solution: ${GridPoint2d.origin.shortestPathTo(oxygen, getNeighbors)!!}")
+    println("Part 2 solution: ${oxygen.shortestPaths(getNeighbors).values.max()!!}")
 }
 
 private fun exploreShip(program: List<Long>): Map<GridPoint2d, AreaType> {
@@ -73,31 +69,6 @@ private fun exploreShip(program: List<Long>): Map<GridPoint2d, AreaType> {
     )
 
     return map
-}
-
-// DFS, simplified because there are no loops possible in our map.
-private fun pathLengths(
-    shipMap: Map<GridPoint2d, AreaType>,
-    start: GridPoint2d
-): Map<GridPoint2d, Int> {
-    val unexplored: Deque<Pair<GridPoint2d, Int>> =
-        LinkedList<Pair<GridPoint2d, Int>>().apply { add(start to 0) }
-
-    val explored = mutableMapOf<GridPoint2d, Int>()
-
-    while (unexplored.isNotEmpty()) {
-        val (coord, pathLength) = unexplored.pollFirst()
-
-        coord
-            .adjacentPoints()
-            .filter { it !in explored }
-            .filter { neighbor -> shipMap[neighbor] != Wall }
-            .forEach { newNeighbor -> unexplored.addLast(newNeighbor to pathLength + 1) }
-
-        explored += coord to pathLength
-    }
-
-    return explored
 }
 
 private fun printShipMap(shipMap: Map<GridPoint2d, AreaType>) {
