@@ -1,13 +1,15 @@
+import Door.Type.Inner
+import Door.Type.Outer
 import extensions.collapseToString
-import extensions.orderedPairs
 
 fun main() {
     val inputMaze = resourceFile("input.txt").readLines()
 
-    println("Part 1 solution: ${shortestPathLength(inputMaze)}")
+    println("Part 1 solution: ${shortestPortalPathLength(inputMaze)}")
+    println("Part 2 solution: ${shortestRecursivePathLength(inputMaze)}")
 }
 
-fun shortestPathLength(rawMaze: List<String>): Int {
+fun shortestPortalPathLength(rawMaze: List<String>): Int {
     val maze = parseMaze(rawMaze)
 
     return maze.start.shortestPathTo(maze.end) { current ->
@@ -16,10 +18,49 @@ fun shortestPathLength(rawMaze: List<String>): Int {
             .filter { neighbor -> neighbor in maze.floor }
             .toMutableSet()
 
-        maze.wormholes
-            .find { (start, _) -> current == start }
-            ?.end
-            ?.let { portalNeighbor -> allNeighbors += portalNeighbor }
+        maze.doors
+            .find { (_, _, coords) -> current == coords }
+            ?.let { door ->
+                maze.doors
+                    .find { (name, _, coords) ->
+                        name == door.name && coords != current
+                    }
+            }
+            ?.let { exitPortal -> allNeighbors += exitPortal.coords }
+
+        return@shortestPathTo allNeighbors.associateWith { 1 }
+    }!!
+}
+
+fun shortestRecursivePathLength(rawMaze: List<String>): Int {
+    val maze = parseMaze(rawMaze)
+
+    fun GridPoint2d.withZ(level: Int) = GridPoint3d(x, y, level)
+    fun GridPoint3d.xyCoords() = GridPoint2d(x, y)
+
+    return maze.start.withZ(0).shortestPathTo(maze.end.withZ(0)) { current ->
+        val allNeighbors = current
+            .xyCoords()
+            .adjacentPoints()
+            .filter { neighbor -> neighbor in maze.floor }
+            .map { coords -> coords.withZ(current.z) }
+            .toMutableSet()
+
+        maze.doors
+            .filterNot { (_, type, _) -> current.z == 0 && type == Outer }
+            .find { (_, _, coords) -> current.xyCoords() == coords }
+            ?.let { door ->
+                maze.doors
+                    .find { (name, _, coords) ->
+                        name == door.name && coords != current.xyCoords()
+                    }
+            }
+            ?.let { exitDoor ->
+                allNeighbors += when (exitDoor.type) {
+                    Outer -> exitDoor.coords.withZ(current.z + 1)
+                    Inner -> exitDoor.coords.withZ(current.z - 1)
+                }
+            }
 
         return@shortestPathTo allNeighbors.associateWith { 1 }
     }!!
@@ -27,16 +68,10 @@ fun shortestPathLength(rawMaze: List<String>): Int {
 
 private fun parseMaze(rawMaze: List<String>): Maze {
     val floor = parseMazeFloor(rawMaze)
-    val namedPortals = parseMazePortals(rawMaze)
-    val (_, start) = namedPortals.find { (name, _) -> name == "AA" }!!
-    val (_, end) = namedPortals.find { (name, _) -> name == "ZZ" }!!
-    val wormholes = namedPortals
-        .groupBy({ (name, _) -> name }) { (_, connectedPortals) -> connectedPortals }
-        .values
-        .flatMap { connectedPortals -> connectedPortals.orderedPairs().keys }
-        .map { (startPortal, endPortal) -> Wormhole(start = startPortal, end = endPortal) }
-
-    return Maze(floor, start, end, wormholes)
+    val doors = parseAllDoors(rawMaze)
+    val (_, _, start) = doors.find { (name, _) -> name == "AA" }!!
+    val (_, _, end) = doors.find { (name, _) -> name == "ZZ" }!!
+    return Maze(floor, start, end, doors)
 }
 
 private fun parseMazeFloor(rawMaze: List<String>): Set<GridPoint2d> {
@@ -52,17 +87,19 @@ private fun parseMazeFloor(rawMaze: List<String>): Set<GridPoint2d> {
         }
 }
 
-private fun parseMazePortals(rawMaze: List<String>): Set<Pair<String, GridPoint2d>> {
-    return parseLeftRightPortals(rawMaze) + parseTopBottomPortals(rawMaze)
+private fun parseAllDoors(rawMaze: List<String>): Collection<Door> {
+    return parseAllLeftRightDoors(rawMaze) + parseAllTopBottomDoors(rawMaze)
 }
 
-private fun parseLeftRightPortals(rawMaze: List<String>): Set<Pair<String, GridPoint2d>> {
+private fun parseAllLeftRightDoors(rawMaze: List<String>): Collection<Door> {
     return rawMaze.foldIndexed(emptySet()) { y, acc, row ->
-        acc + parsePortals(row).map { (name, x) -> name to GridPoint2d(x - 2, y - 2) }
+        acc + parseLinearDoors(row).map { (name, type, x) ->
+            Door(name, type, GridPoint2d(x - 2, y - 2))
+        }
     }
 }
 
-private fun parseTopBottomPortals(rawMaze: List<String>): Set<Pair<String, GridPoint2d>> {
+private fun parseAllTopBottomDoors(rawMaze: List<String>): Collection<Door> {
     val height = rawMaze.size
     val maxWidth = rawMaze.map(String::length).max()!!
 
@@ -71,21 +108,37 @@ private fun parseTopBottomPortals(rawMaze: List<String>): Set<Pair<String, GridP
             .map { y -> rawMaze[y].getOrElse(x) { ' ' } }
             .collapseToString()
 
-        acc + parsePortals(column).map { (name, y) -> name to GridPoint2d(x - 2, y - 2) }
+        acc + parseLinearDoors(column).map { (name, type, y) ->
+            Door(name, type, GridPoint2d(x - 2, y - 2))
+        }
     }
 }
 
-private fun parsePortals(string: String): List<Pair<String, Int>> {
-    return string.windowed(size = 3)
+private fun parseLinearDoors(string: String): Collection<LinearDoorParsingResult> {
+    val windowSize = 3
+
+    fun doorType(firstIndex: Int): Door.Type {
+        return if (firstIndex == 0 || firstIndex == string.length - windowSize) Outer else Inner
+    }
+
+    return string.windowed(size = windowSize)
         .withIndex()
         .mapNotNull { (firstIndex, window) ->
             return@mapNotNull when {
                 window.matches(Regex("\\.[A-Z]{2}")) -> {
-                    window.drop(1) to firstIndex
+                    LinearDoorParsingResult(
+                        doorName = window.drop(1),
+                        doorType = doorType(firstIndex),
+                        index = firstIndex
+                    )
                 }
 
                 window.matches(Regex("[A-Z]{2}\\.")) -> {
-                    window.dropLast(1) to firstIndex + 2
+                    LinearDoorParsingResult(
+                        doorName = window.dropLast(1),
+                        doorType = doorType(firstIndex),
+                        index = firstIndex + 2
+                    )
                 }
 
                 else -> null
@@ -97,7 +150,15 @@ private class Maze(
     val floor: Set<GridPoint2d>,
     val start: GridPoint2d,
     val end: GridPoint2d,
-    val wormholes: List<Wormhole>
+    val doors: Collection<Door>
 )
 
-private data class Wormhole(val start: GridPoint2d, val end: GridPoint2d)
+private data class Door(val name: String, val type: Type, val coords: GridPoint2d) {
+    enum class Type { Outer, Inner }
+}
+
+private data class LinearDoorParsingResult(
+    val doorName: String,
+    val doorType: Door.Type,
+    val index: Int
+)
