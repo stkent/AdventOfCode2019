@@ -15,3 +15,9 @@ fun Long.digits(): List<Int> {
 
     return result
 }
+
+fun Long.nonNegativeRem(other: Long): Long {
+    var result = rem(other)
+    if (result < 0) result += other
+    return result
+}
