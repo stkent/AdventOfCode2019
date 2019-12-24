@@ -1,9 +1,5 @@
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toLong)
+    val inputProgram = Computer.parseProgramFile("input.txt")
 
     val computer = Computer()
 

@@ -3,11 +3,7 @@ import PaintColor.Black
 import PaintColor.White
 
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toLong)
+    val inputProgram = Computer.parseProgramFile("input.txt")
 
     println("Part 1 solution: ${Robot().paint(inputProgram, startColor = Black).size}")
 

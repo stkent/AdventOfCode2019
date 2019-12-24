@@ -3,11 +3,7 @@ import TileType.*
 import kotlin.math.sign
 
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toLong)
+    val inputProgram = Computer.parseProgramFile("input.txt")
 
     // Part 1
     val (startTiles, _) = Game().play(inputProgram)

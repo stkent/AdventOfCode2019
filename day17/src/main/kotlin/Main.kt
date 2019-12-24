@@ -1,11 +1,7 @@
 import kotlin.math.absoluteValue
 
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toLong)
+    val inputProgram = Computer.parseProgramFile("input.txt")
 
     // Part 1
     val scaffoldMap = mapScaffold(program = inputProgram)

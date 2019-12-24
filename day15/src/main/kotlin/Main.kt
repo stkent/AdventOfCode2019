@@ -2,11 +2,7 @@ import Computer.Input.*
 import AreaType.*
 
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toLong)
+    val inputProgram = Computer.parseProgramFile("input.txt")
 
     val shipMap = exploreShip(program = inputProgram)
 //    printShipMap(shipMap)

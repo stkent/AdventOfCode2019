@@ -9,11 +9,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 
 fun main() {
-    val inputProgram = resourceFile("input.txt")
-        .readLines()
-        .first()
-        .split(',')
-        .map(String::toInt)
+    val inputProgram = Computer.parseProgram("input.txt")
 
     println("Part 1 solution: ${computeMaxSignal(inputProgram, withFeedback = false)}")
     println("Part 2 solution: ${computeMaxSignal(inputProgram, withFeedback = true)}")

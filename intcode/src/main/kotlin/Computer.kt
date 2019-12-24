@@ -2,6 +2,16 @@ import extensions.digits
 
 class Computer {
 
+    companion object {
+        fun parseProgramFile(resourceFileName: String): List<Long> {
+            return resourceFile(resourceFileName)
+                .readLines()
+                .first()
+                .split(',')
+                .map(String::toLong)
+        }
+    }
+
     sealed class Input {
         class Value(val rawValue: Long) : Input()
         object Terminate : Input()
