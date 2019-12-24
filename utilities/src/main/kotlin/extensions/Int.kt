@@ -38,6 +38,32 @@ fun Int.isPrime(): Boolean {
     return true
 }
 
+// https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers
+/**
+ * Given `a` ([this]) and [n], returns the solution of `at ≡ 1 mod n`.
+ */
+fun Int.modularInverse(n: Int): Int? {
+    var t = 0
+    var newT = 1
+    var r = n
+    var newR = if (this < 0) this.nonNegativeRem(n) else this
+
+    while (newR != 0) {
+        val quotient = r / newR
+        val oldT = t
+        t = newT
+        newT = oldT - quotient * newT
+        val oldR = r
+        r = newR
+        newR = oldR - quotient * newR
+    }
+
+    if (r > 1) return null
+    if (t < 0) return t + n
+    return t
+}
+
 fun Int.nonNegativeRem(other: Int): Int {
     var result = rem(other)
     if (result < 0) result += other
