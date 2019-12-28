@@ -61,7 +61,8 @@ fun main() {
                 set(0, 2)
             },
         source = { inputs.next() },
-        sink = { outputs += it })
+        sink = { outputs += it }
+    )
 
     println("Part 2 solution: ${outputs.last()}")
 }
@@ -94,7 +95,8 @@ private fun mapScaffold(program: List<Long>): Map<GridPoint2d, Char> {
 
                 else -> result += GridPoint2d(x++, y) to output.toChar()
             }
-        })
+        }
+    )
 
     return result
 }
